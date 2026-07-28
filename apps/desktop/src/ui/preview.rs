@@ -246,15 +246,15 @@ fn render_scml_character(
 
         let (rx, ry) = dutch_rotate(sx, sy, mon_cx, ground_y, tilt_angle);
 
-        // Pivot di SCML: (0,1) = bottom-left. (0.5,0.5) = center.
-        // Untuk rotating part centered pada pivot point:
-        // draw_x/y = world_pos − pivot * rotated_size (di screen space)
+        // Pivot in SCML: (0,1) = bottom-left, (0.5,0.5) = center.
+        // For rotating part centered on pivot point:
+        // draw_x = rx - draw_w * pivot_x
+        // draw_y = ry - draw_h * (1 - pivot_y)  // SCML Y-up → screen Y-down
         let draw_w = out_w * char_scale * (obj.scale_x.abs() as f32).max(0.05);
         let draw_h = out_h * char_scale * (obj.scale_y.abs() as f32).max(0.05);
 
-        // Center part di (rx, ry) — pivot point tadi tinggal di pusat part rotated
-        let draw_x = rx - draw_w * 0.5;
-        let draw_y = ry - draw_h * 0.5;
+        let draw_x = rx - draw_w * pivot_x;
+        let draw_y = ry - draw_h * (1.0 - pivot_y);
 
         let bounds = gpui::Bounds {
             origin: point(px(draw_x), px(draw_y)),
