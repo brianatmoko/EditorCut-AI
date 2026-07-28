@@ -1,0 +1,43 @@
+name: "cinematic"
+description: "Cinematic widescreen template with title overlay"
+style: "cinematic"
+aspect_ratio: "16:9"
+tags: [cinematic, film, widescreen, professional]
+
+tracks:
+  - id: "main_video"
+    type: "video"
+    position: { x: 0, y: 0, z: 0 }
+    size: { width: 1.0, height: 1.0, unit: "normalized" }
+    timeline: { start: 0, end: 30 }
+    transform: { scale: 1.0, opacity: 1.0 }
+    style: { fit: "cover" }
+
+  - id: "title_overlay"
+    type: "text"
+    position: { x: 0.5, y: 0.45, z: 2 }
+    size: { width: 0.8, height: 0.12, unit: "normalized" }
+    timeline: { start: 0, end: 5 }
+    transform: { opacity: 1.0, anchor: "center" }
+    style:
+      text: "{TITLE}"
+      font_family: "Montserrat"
+      font_size: 56
+      color: "#FFFFFF"
+      font_weight: 700
+      text_align: "center"
+      shadow: { offset: [2, 2], blur: 4, color: "#00000080" }
+
+  - id: "subtitle"
+    type: "text"
+    position: { x: 0.5, y: 0.92, z: 3 }
+    size: { width: 0.9, height: 0.06, unit: "normalized" }
+    timeline: { start: 0, end: 30 }
+    transform: { opacity: 0.85 }
+    style:
+      text: "(auto subtitle)"
+      font_family: "Inter"
+      font_size: 20
+      color: "#FFFFFF"
+      text_align: "center"
+      shadow: { offset: [1, 1], blur: 2, color: "#000000" }

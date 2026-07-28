@@ -1,0 +1,31 @@
+name: "vlog"
+description: "Casual vlog layout with face cam, B-roll, and caption"
+style: "vlog"
+aspect_ratio: "16:9"
+tags: [vlog, daily, casual, talking]
+
+tracks:
+  - id: "main"
+    type: "video"
+    position: { x: 0.5, y: 0.5, z: 0 }
+    size: { width: 1.0, height: 1.0 }
+    timeline: { start: 0, end: 300 }
+
+  - id: "face_cam"
+    type: "video"
+    position: { x: 0.15, y: 0.8, z: 1 }
+    size: { width: 0.25, height: 0.25 }
+    timeline: { start: 0, end: 300 }
+    transform: { scale: 1.0, opacity: 1.0, anchor: "center" }
+
+  - id: "caption"
+    type: "text"
+    position: { x: 0.5, y: 0.06, z: 2 }
+    size: { width: 0.9, height: 0.06 }
+    timeline: { start: 0, end: 300 }
+    style:
+      text: "{TITLE}"
+      font_size: 32
+      color: "#FFFFFF"
+      text_align: "center"
+      shadow: { offset: [1, 1], blur: 2, color: "#000000" }

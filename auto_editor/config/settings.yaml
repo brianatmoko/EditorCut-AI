@@ -1,0 +1,22 @@
+mode: "hybrid"
+local:
+  llm_model: "moko/MOKO-AI-4B-Q3_K_M.gguf"
+  tts_model: "cosyvoice/CosyVoice-300M.gguf"
+  asr_model: "whisper/whisper-small.gguf"
+  models_dir: "./models/"
+api:
+  llm:
+    provider: "openai"
+    model: "gpt-4o-mini"
+    max_tokens: 2000
+  pexels:
+    api_key: ""
+resources:
+  max_vram_gb: 4
+  max_ram_gb: 8
+  max_threads: 4
+behavior:
+  confidence_threshold: 0.7
+  max_retries: 2
+  cache_enabled: true
+  cache_ttl_minutes: 60

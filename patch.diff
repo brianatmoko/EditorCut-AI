@@ -1,0 +1,12 @@
+--- apps/desktop/src/ui/preview.rs
++++ apps/desktop/src/ui/preview.rs
+@@ -654,6 +654,9 @@
+                     None => continue,
+                 };
+ 
++                if bone.label == "torso" || bone.label == "head" {
++                    println!("BONE {}: x1={}, y1={}, x2={}, y2={}, angle={}, length={}", bone.label, bone.x1, bone.y1, bone.x2, bone.y2, bone.angle, bone.length);
++                }
+                 let ox = bx1(bone);
+                 let oy = by1(bone);
+                 let len = blen(bone);

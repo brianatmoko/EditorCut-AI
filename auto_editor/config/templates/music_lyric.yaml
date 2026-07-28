@@ -1,0 +1,35 @@
+name: "music_lyric"
+description: "Music lyric video with synchronized text"
+style: "music"
+aspect_ratio: "16:9"
+tags: [music, lyric, song, audio]
+
+tracks:
+  - id: "background"
+    type: "video"
+    position: { x: 0.5, y: 0.5, z: 0 }
+    size: { width: 1.0, height: 1.0 }
+    timeline: { start: 0, end: 240 }
+    style: { fit: "cover" }
+
+  - id: "lyric_main"
+    type: "text"
+    position: { x: 0.5, y: 0.5, z: 1 }
+    size: { width: 0.9, height: 0.2 }
+    timeline: { start: 0, end: 240 }
+    style:
+      text: "{LYRIC}"
+      font_size: 56
+      color: "#FFFFFF"
+      font_weight: 700
+      text_align: "center"
+      shadow: { offset: [2, 2], blur: 6, color: "#000000CC" }
+
+  - id: "progress_bar"
+    type: "shape"
+    position: { x: 0.5, y: 0.9, z: 0 }
+    size: { width: 0.6, height: 0.01 }
+    timeline: { start: 0, end: 240 }
+    shape_style:
+      background_color: "#FF4444"
+      border_radius: 2

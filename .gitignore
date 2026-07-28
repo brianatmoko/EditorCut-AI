@@ -1,0 +1,74 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# asdf version management
+.tool-versions
+
+node_modules
+.cursorignore
+.turbo
+
+.env*
+!*.env.example
+
+# cursor
+bun.lockb
+
+# content-collections
+.content-collections
+
+# Twiggy
+.cursor/
+
+.open-next
+
+target/
+
+.cargo-tools/
+
+rust-migration-notes.md
+
+# Secrets — never commit API keys
+opencut_config.json
+*.secret
+secrets/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+.ipynb_checkpoints/
+
+# Build artifacts
+target/
+bin/
+*.rlib
+ffmpeg.tar.xz
+
+# Large asset caches (regenerable)
+.asset_cache/
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.orig
+*.bak
+
+# Test artifacts
+test_pose
+test_pose.rs
+
+# Log files
+*.log
+
+# Large third-party character asset folders (download separately)
+craftpix-*/
+kenney_modular-characters/

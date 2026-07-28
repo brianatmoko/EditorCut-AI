@@ -1,0 +1,54 @@
+name: "ads"
+description: "Short advertisement 15-60 seconds, fast paced"
+style: "cinematic"
+aspect_ratio: "16:9"
+tags: [ads, iklan, commercial, promotion, 15s]
+
+tracks:
+  - id: "clip"
+    type: "video"
+    position: { x: 0.5, y: 0.5, z: 0 }
+    size: { width: 1.0, height: 1.0 }
+    timeline: { start: 0, end: 60 }
+
+  - id: "logo"
+    type: "image"
+    position: { x: 0.5, y: 0.15, z: 1 }
+    size: { width: 0.3, height: 0.15 }
+    timeline: { start: 0, end: 3 }
+
+  - id: "headline"
+    type: "text"
+    position: { x: 0.5, y: 0.5, z: 2 }
+    size: { width: 0.9, height: 0.15 }
+    timeline: { start: 2, end: 8 }
+    style:
+      text: "{HEADLINE}"
+      font_size: 64
+      color: "#FFFFFF"
+      font_weight: 900
+      text_align: "center"
+      shadow: { offset: [3, 3], blur: 8, color: "#000000" }
+
+  - id: "cta"
+    type: "text"
+    position: { x: 0.5, y: 0.85, z: 2 }
+    size: { width: 0.7, height: 0.08 }
+    timeline: { start: 8, end: 60 }
+    style:
+      text: "{CTA}"
+      font_size: 40
+      color: "#FF4444"
+      font_weight: 700
+      text_align: "center"
+
+  - id: "subtitle"
+    type: "text"
+    position: { x: 0.5, y: 0.92, z: 3 }
+    size: { width: 0.9, height: 0.06 }
+    timeline: { start: 0, end: 60 }
+    style:
+      text: "(auto subtitle)"
+      font_size: 18
+      color: "#FFFFFF"
+      text_align: "center"

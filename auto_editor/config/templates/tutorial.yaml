@@ -1,0 +1,31 @@
+name: "tutorial"
+description: "Tutorial/screen recording with inset face cam and step text"
+style: "tutorial"
+aspect_ratio: "16:9"
+tags: [tutorial, screen, education, howto]
+
+tracks:
+  - id: "screen"
+    type: "video"
+    position: { x: 0.5, y: 0.5, z: 0 }
+    size: { width: 1.0, height: 0.85 }
+    timeline: { start: 0, end: 600 }
+    style: { fit: "contain" }
+
+  - id: "face_cam"
+    type: "video"
+    position: { x: 0.15, y: 0.8, z: 1 }
+    size: { width: 0.2, height: 0.2 }
+    timeline: { start: 0, end: 600 }
+
+  - id: "step_number"
+    type: "text"
+    position: { x: 0.08, y: 0.1, z: 2 }
+    size: { width: 0.15, height: 0.08 }
+    timeline: { start: 0, end: 600 }
+    style:
+      text: "{STEP}"
+      font_size: 72
+      color: "#FF8800"
+      font_weight: 800
+      text_align: "left"

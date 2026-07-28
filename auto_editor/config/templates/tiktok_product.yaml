@@ -1,0 +1,51 @@
+name: "tiktok_product"
+description: "TikTok 9:16 vertical product review layout"
+style: "product"
+aspect_ratio: "9:16"
+tags: [tiktok, product, review, vertical, social]
+
+tracks:
+  - id: "main_video"
+    type: "video"
+    position: { x: 0.5, y: 0.5, z: 0 }
+    size: { width: 1.0, height: 0.7, unit: "normalized" }
+    timeline: { start: 0, end: 60 }
+    style: { fit: "cover" }
+
+  - id: "product_name"
+    type: "text"
+    position: { x: 0.5, y: 0.06, z: 2 }
+    size: { width: 0.9, height: 0.08, unit: "normalized" }
+    timeline: { start: 0, end: 60 }
+    transform: { opacity: 1.0 }
+    style:
+      text: "{PRODUCT_NAME}"
+      font_size: 52
+      color: "#FFFFFF"
+      font_weight: 800
+      text_align: "center"
+
+  - id: "price_tag"
+    type: "text"
+    position: { x: 0.5, y: 0.14, z: 2 }
+    size: { width: 0.5, height: 0.06, unit: "normalized" }
+    timeline: { start: 0, end: 60 }
+    style:
+      text: "{PRICE}"
+      font_size: 40
+      color: "#FF4444"
+      font_weight: 700
+      text_align: "center"
+
+  - id: "cta_button"
+    type: "text"
+    position: { x: 0.5, y: 0.90, z: 3 }
+    size: { width: 0.7, height: 0.06, unit: "normalized" }
+    timeline: { start: 50, end: 60 }
+    transform: { scale: 1.0, opacity: 1.0 }
+    style:
+      text: "⬇ BELI SEKARANG ⬇"
+      font_size: 36
+      color: "#FF4444"
+      font_weight: 700
+      text_align: "center"
