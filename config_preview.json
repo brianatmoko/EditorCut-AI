@@ -1,0 +1,120 @@
+{
+  "v": 7,
+  "chars": {
+    "terrorist_1": {
+      "parts": {
+        "shadow.png": {
+          "bone": "",
+          "dx": 0,
+          "dy": 0,
+          "angle": 0
+        },
+        "right_arm.png": {
+          "bone": "hand_r",
+          "dx": 0,
+          "dy": 0,
+          "angle": 0
+        },
+        "right_shoulder.png": {
+          "bone": "upper_arm_r",
+          "dx": 0,
+          "dy": 0,
+          "angle": 0
+        },
+        "right_forearm.png": {
+          "bone": "forearm_r",
+          "dx": 0,
+          "dy": 0,
+          "angle": 0
+        },
+        "right_hip.png": {
+          "bone": "upper_leg_r",
+          "dx": 0,
+          "dy": 0,
+          "angle": 0
+        },
+        "left_hip.png": {
+          "bone": "upper_leg_l",
+          "dx": 0,
+          "dy": 0,
+          "angle": 0
+        },
+        "body.png": {
+          "bone": "torso",
+          "dx": 0,
+          "dy": 0,
+          "angle": 0
+        },
+        "pants.png": {
+          "bone": "torso",
+          "dx": 0,
+          "dy": 0,
+          "angle": 0
+        },
+        "neck.png": {
+          "bone": "neck",
+          "dx": 0,
+          "dy": 0,
+          "angle": 0
+        },
+        "right_leg.png": {
+          "bone": "lower_leg_r",
+          "dx": 0,
+          "dy": 0,
+          "angle": 0
+        },
+        "left_leg.png": {
+          "bone": "lower_leg_l",
+          "dx": 0,
+          "dy": 0,
+          "angle": 0
+        },
+        "left_shoulder.png": {
+          "bone": "upper_arm_l",
+          "dx": 0,
+          "dy": 0,
+          "angle": 0
+        },
+        "head.png": {
+          "bone": "head",
+          "dx": 0,
+          "dy": 0,
+          "angle": 0
+        },
+        "left_arm.png": {
+          "bone": "hand_l",
+          "dx": 0,
+          "dy": 0,
+          "angle": 0
+        },
+        "left_forearm.png": {
+          "bone": "forearm_l",
+          "dx": 0,
+          "dy": 0,
+          "angle": 0
+        }
+      },
+      "angles": {
+        "body_tilt": -5.523298999999994,
+        "spine_lower": 350.949083,
+        "neck": 21.807626,
+        "head_turn": 0,
+        "shoulder_l": 136.666166,
+        "elbow_l": 63.649047,
+        "wrist_l": 3.590874,
+        "shoulder_r": 172.384038,
+        "elbow_r": 69.916709,
+        "wrist_r": 357.72217,
+        "hip_l": 179.739334,
+        "knee_l": 357.193111,
+        "hip_r": 213.166852,
+        "knee_r": 319.698447
+      }
+    }
+  },
+  "view": {
+    "cx": 0,
+    "cy": 0.5,
+    "zoom": 350
+  }
+}

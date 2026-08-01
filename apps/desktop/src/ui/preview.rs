@@ -179,19 +179,30 @@ fn render_scml_character(
     let time_ms = ((current_time * 1000.0) as u32) % anim.length.max(1);
     let pose = evaluate_pose(scml_data, entity, anim, time_ms, None);
 
-    // ── SCML pixel-units → screen pixels ──────────────────────────────
-    // Airama karakter preview: tinggi sprite setinggi `proj.sprite_h` pixel.
-    // Karakter SCML pakai pixel koordinate orphan. Pilih referensi: tinggi
-    // rata-rata objek "body" dari SCML mainline ~ 200px. Kalibrasi scale:
-    let ref_height = 500.0_f32; // total karakter ~500px di SCML space
+    // ── Dynamic SCML coordinate range ─────────────────────────────────
+    // Compute Y range from the current pose so ref_height and y_offset adapt
+    // to any character (terrorist, police, chibi) without hard-coding.
+    let mut min_y = f32::MAX;
+    let mut max_y = f32::MIN;
+    let mut min_x = f32::MAX;
+    let mut max_x = f32::MIN;
+    for obj in &pose.objects {
+        if obj.alpha < 0.01 { continue; }
+        min_y = min_y.min(obj.world_y as f32);
+        max_y = max_y.max(obj.world_y as f32);
+        min_x = min_x.min(obj.world_x as f32);
+        max_x = max_x.max(obj.world_x as f32);
+    }
+    // Fallback if pose is empty
+    let scml_height = (max_y - min_y).max(100.0);
+    let scml_y_offset = min_y; // feet at min_y (SCML Y-up, ground = lowest Y)
+    let ref_height = scml_height * 1.05; // 5% margin to avoid clipping
+
     let char_scale = (proj.sprite_h / ref_height).max(0.05);
 
-    // Karakter center di screen:
-    // proj.screen_y = feet/ground level. Karakter root bone ada di tengah
-    // (anatomi pivot). Untuk alignment yang natural, pakai proyeksi origin
-    // di midpoint vertikal sprite, supaya World Y=0 di SCML ada di center.
+    // Feet (SCML Y ~scml_y_offset) map to ground (proj.screen_y = feet level).
     let char_cx = proj.screen_x;
-    let char_cy = proj.screen_y - proj.sprite_h * 0.5;
+    let char_cy = proj.screen_y; // ground = feet level
 
     for obj in &pose.objects {
         if obj.alpha < 0.01 { continue; }
@@ -209,10 +220,35 @@ fn render_scml_character(
         let angle_rounded = (angle_deg / 5.0).round() as i32 * 5; // quantum 5°
         let cache_key = (file_name.clone(), angle_rounded, facing_left);
 
-        let (img, out_w, out_h) = {
+        // Character-space dimensions of original (unrotated) part
+        let orig_w = fw;
+        let orig_h = fh;
+
+        let (img, out_w, out_h, piv_off_x, piv_off_y) = {
             let cache = skin.rotated_cache.lock().unwrap();
             if let Some(&(ref ri, w, h)) = cache.get(&cache_key) {
-                (Arc::clone(ri), w, h)
+                // Cache hit: recompute pivot offset from stored data
+                // (We don't store pivot offset in cache; recompute from out dimensions.)
+                // Pivot offset is relative to output image, depends on rotation angle.
+                // For correctness, we recompute it here.
+                let rad = (angle_rounded as f32).to_radians();
+                let cos = rad.cos();
+                let sin = rad.sin();
+                let piv_px = pivot_x * orig_w;
+                let piv_py = (1.0 - pivot_y) * orig_h;
+                let corners = [
+                    (-piv_px, -piv_py),
+                    (orig_w - piv_px, -piv_py),
+                    (orig_w - piv_px, orig_h - piv_py),
+                    (-piv_px, orig_h - piv_py),
+                ];
+                let mut min_x = f32::MAX; let mut min_y = f32::MAX;
+                for (x, y) in corners {
+                    let rx = x * cos - y * sin;
+                    let ry = x * sin + y * cos;
+                    min_x = min_x.min(rx); min_y = min_y.min(ry);
+                }
+                (Arc::clone(ri), w, h, -min_x, -min_y)
             } else {
                 drop(cache);
                 // Lazy-load raw RGBA
@@ -232,29 +268,37 @@ fn render_scml_character(
                     }
                 };
 
-                // Rotate + flip → RenderImage
-                let (ri, w, h) = rotate_rgba_image(&raw, if angle_rounded == 0 { 0.01 } else { angle_rounded as f32 }, facing_left);
+                // Rotate + flip → RenderImage, using PIVOT-aware rotation
+                let angle_for_rot = if angle_rounded == 0 { 0.0 } else { angle_rounded as f32 };
+                let (ri, w, h, ox, oy) = rotate_rgba_image_pivot(
+                    &raw, angle_for_rot, facing_left, pivot_x, pivot_y
+                );
                 let mut cache = skin.rotated_cache.lock().unwrap();
                 cache.insert(cache_key.clone(), (Arc::clone(&ri), w, h));
-                (ri, w, h)
+                (ri, w, h, ox, oy)
             }
         };
 
         // ── Compute screen position: SCML pixel-space → screen-space ──
         let sx = char_cx + obj.world_x * char_scale;
-        let sy = char_cy - obj.world_y * char_scale; // SCML Y-up → screen Y-down
+        let sy = char_cy - (obj.world_y - scml_y_offset) * char_scale; // SCML Y-up → screen Y-down, feet at ground
 
         let (rx, ry) = dutch_rotate(sx, sy, mon_cx, ground_y, tilt_angle);
 
-        // Pivot in SCML: (0,1) = bottom-left, (0.5,0.5) = center.
-        // For rotating part centered on pivot point:
-        // draw_x = rx - draw_w * pivot_x
-        // draw_y = ry - draw_h * (1 - pivot_y)  // SCML Y-up → screen Y-down
+        // Position the part so that the PIVOT point within the rotated image
+        // lands at the bone position (rx, ry).
+        // piv_off_x / piv_off_y = pivot's pixel position within the rotated output image.
+        // Scale by char_scale to get screen-space offset.
         let draw_w = out_w * char_scale * (obj.scale_x.abs() as f32).max(0.05);
         let draw_h = out_h * char_scale * (obj.scale_y.abs() as f32).max(0.05);
 
-        let draw_x = rx - draw_w * pivot_x;
-        let draw_y = ry - draw_h * (1.0 - pivot_y);
+        // Pivot offset in screen-space (relative to output image top-left)
+        let piv_sx = piv_off_x * char_scale;
+        let piv_sy = piv_off_y * char_scale;
+
+        // Position so output image's (piv_sx, piv_sy) aligns with (rx, ry)
+        let draw_x = rx - piv_sx;
+        let draw_y = ry - piv_sy;
 
         let bounds = gpui::Bounds {
             origin: point(px(draw_x), px(draw_y)),
@@ -1934,7 +1978,7 @@ impl Render for Preview {
         let play_icon = if self.is_playing { "⏸" } else { "▶" };
 
         let stickman_arc = self.render_data.clone();
-        let has_data = stickman_arc.is_some() || self.cinematic_movie.is_some();
+        let has_cinematic = self.cinematic_movie.is_some();
 
         // Compute cinematic progress for transport bar overlay
         let cinematic_progress: Option<(String, String, f64)> = self.cinematic_movie.as_ref().map(|m| {
@@ -2034,7 +2078,7 @@ impl Render for Preview {
                                         .child(SharedString::from(format!("🎬 {} — AI Director", movie_status)))
                                 )
                                 .into_any_element()
-                        } else if has_data {
+                        } else if has_cinematic {
                             canvas(
                                 move |bounds, _window, _cx| { let _ = bounds; },
                                 move |bounds, (), window, _cx| {
@@ -2404,34 +2448,56 @@ fn load_skin_scml(scml_dir: &std::path::Path) -> Option<(Arc<ScmlData>, String)>
 }
 
 /// Rotate and optionally horizontally flip a small RGBA sub-texture.
-fn rotate_rgba_image(
+/// Rotate RGBA image around a PIVOT point (in image-space fractions, SCML convention:
+/// (0,1) = bottom-left, (0.5,0.5) = center). Returns rotated RenderImage + its bounding
+/// box dimensions (out_w, out_h) + the pivot's position WITHIN the rotated image
+/// (pivot_off_x, pivot_off_y) so the caller can position the part correctly.
+fn rotate_rgba_image_pivot(
     raw: &image::RgbaImage,
     angle_deg: f32,
     flip_x: bool,
-) -> (Arc<RenderImage>, f32, f32) {
+    pivot_x: f32,
+    pivot_y: f32,
+) -> (Arc<RenderImage>, f32, f32, f32, f32) {
     let src = if flip_x {
         image::imageops::flip_horizontal(raw)
     } else {
         raw.clone()
     };
 
-    if angle_deg.abs() < 1.0 || src.width() == 0 || src.height() == 0 {
+    let src_w = src.width();
+    let src_h = src.height();
+
+    // Pivot in pixel coordinates (image-space, Y-down from top-left)
+    // SCML pivot: (0,1) = bottom-left → px=0, py=src_h
+    //             (0.5,0.5) = center → px=src_w/2, py=src_h/2
+    let piv_px = pivot_x * src_w as f32;
+    let piv_py = (1.0 - pivot_y) * src_h as f32;
+
+    if angle_deg.abs() < 1.0 || src_w == 0 || src_h == 0 {
         let mut data = src.into_raw();
         for chunk in data.chunks_exact_mut(4) { chunk.swap(0, 2); }
-        let buf = image::ImageBuffer::<image::Rgba<u8>, Vec<u8>>::from_raw(raw.width(), raw.height(), data).unwrap();
-        return (Arc::new(RenderImage::new(vec![image::Frame::new(buf)])), raw.width() as f32, raw.height() as f32);
+        let buf = image::ImageBuffer::<image::Rgba<u8>, Vec<u8>>::from_raw(src_w, src_h, data).unwrap();
+        return (
+            Arc::new(RenderImage::new(vec![image::Frame::new(buf)])),
+            src_w as f32,
+            src_h as f32,
+            piv_px,   // pivot offset within output image
+            piv_py,
+        );
     }
 
     let rad = angle_deg.to_radians();
     let cos = rad.cos();
     let sin = rad.sin();
 
-    let src_w = src.width();
-    let src_h = src.height();
-    let cx = src_w as f32 / 2.0;
-    let cy = src_h as f32 / 2.0;
-
-    let corners = [(-cx, -cy), (cx, -cy), (cx, cy), (-cx, cy)];
+    // Compute 4 corners relative to pivot, rotate them, find bounding box
+    let corners = [
+        (-piv_px,           -piv_py),            // top-left relative to pivot
+        (src_w as f32 - piv_px, -piv_py),         // top-right
+        (src_w as f32 - piv_px, src_h as f32 - piv_py), // bottom-right
+        (-piv_px,            src_h as f32 - piv_py),    // bottom-left
+    ];
     let mut min_x = f32::MAX; let mut max_x = f32::MIN;
     let mut min_y = f32::MAX; let mut max_y = f32::MIN;
     for (x, y) in corners {
@@ -2441,28 +2507,29 @@ fn rotate_rgba_image(
         min_y = min_y.min(ry); max_y = max_y.max(ry);
     }
 
-    let out_w = (max_x - min_x).ceil() as u32;
-    let out_h = (max_y - min_y).ceil() as u32;
+    let out_w = ((max_x - min_x).ceil() as u32).max(1);
+    let out_h = ((max_y - min_y).ceil() as u32).max(1);
 
-    if out_w == 0 || out_h == 0 {
-        let mut data = src.into_raw();
-        for chunk in data.chunks_exact_mut(4) { chunk.swap(0, 2); }
-        let buf = image::ImageBuffer::<image::Rgba<u8>, Vec<u8>>::from_raw(raw.width(), raw.height(), data).unwrap();
-        return (Arc::new(RenderImage::new(vec![image::Frame::new(buf)])), raw.width() as f32, raw.height() as f32);
-    }
-
-    let out_cx = out_w as f32 / 2.0;
-    let out_cy = out_h as f32 / 2.0;
+    // After rotation, the pivot is at (0,0) in the rotated space.
+    // The output image's top-left is at (min_x, min_y) in rotated space.
+    // So the pivot's position within the output image is:
+    //   pivot_off_x = -min_x
+    //   pivot_off_y = -min_y
+    let pivot_off_x = -min_x;
+    let pivot_off_y = -min_y;
 
     let mut out_data = vec![0u8; (out_w * out_h * 4) as usize];
     let src_bytes = src.as_raw();
 
     for oy in 0..out_h {
         for ox in 0..out_w {
-            let dx = ox as f32 - out_cx;
-            let dy = oy as f32 - out_cy;
-            let sx_coord = dx * cos + dy * sin + cx;
-            let sy_coord = -dx * sin + dy * cos + cy;
+            // Output pixel relative to pivot
+            let dx = ox as f32 - pivot_off_x;
+            let dy = oy as f32 - pivot_off_y;
+
+            // Inverse rotation: find source pixel
+            let sx_coord = dx * cos + dy * sin + piv_px;
+            let sy_coord = -dx * sin + dy * cos + piv_py;
 
             let ix = sx_coord.round() as i32;
             let iy = sy_coord.round() as i32;
@@ -2479,13 +2546,34 @@ fn rotate_rgba_image(
     }
 
     if let Some(buf) = image::ImageBuffer::<image::Rgba<u8>, Vec<u8>>::from_raw(out_w, out_h, out_data) {
-        (Arc::new(RenderImage::new(vec![image::Frame::new(buf)])), out_w as f32, out_h as f32)
+        (
+            Arc::new(RenderImage::new(vec![image::Frame::new(buf)])),
+            out_w as f32,
+            out_h as f32,
+            pivot_off_x,
+            pivot_off_y,
+        )
     } else {
         let mut data = src.into_raw();
         for chunk in data.chunks_exact_mut(4) { chunk.swap(0, 2); }
-        let buf = image::ImageBuffer::<image::Rgba<u8>, Vec<u8>>::from_raw(raw.width(), raw.height(), data).unwrap();
-        (Arc::new(RenderImage::new(vec![image::Frame::new(buf)])), raw.width() as f32, raw.height() as f32)
+        let buf = image::ImageBuffer::<image::Rgba<u8>, Vec<u8>>::from_raw(src_w, src_h, data).unwrap();
+        (
+            Arc::new(RenderImage::new(vec![image::Frame::new(buf)])),
+            src_w as f32,
+            src_h as f32,
+            piv_px,
+            piv_py,
+        )
     }
+}
+
+fn rotate_rgba_image(
+    raw: &image::RgbaImage,
+    angle_deg: f32,
+    flip_x: bool,
+) -> (Arc<RenderImage>, f32, f32) {
+    let (ri, w, h, _ox, _oy) = rotate_rgba_image_pivot(raw, angle_deg, flip_x, 0.5, 0.5);
+    (ri, w, h)
 }
 
 

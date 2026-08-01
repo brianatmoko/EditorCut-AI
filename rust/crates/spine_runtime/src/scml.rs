@@ -818,5 +818,16 @@ mod tests {
         for obj in &pose.objects {
             assert!(obj.alpha > 0.0, "alpha should be positive for object {}", obj.name);
         }
+        // Debug output to check coordinate ranges
+        let min_x = pose.objects.iter().map(|o| o.world_x).fold(f32::MAX, f32::min);
+        let max_x = pose.objects.iter().map(|o| o.world_x).fold(f32::NEG_INFINITY, f32::max);
+        let min_y = pose.objects.iter().map(|o| o.world_y).fold(f32::MAX, f32::min);
+        let max_y = pose.objects.iter().map(|o| o.world_y).fold(f32::NEG_INFINITY, f32::max);
+        eprintln!("[SCML Debug] Idle t=0: {} objects, X range [{:.1}, {:.1}], Y range [{:.1}, {:.1}]",
+            pose.objects.len(), min_x, max_x, min_y, max_y);
+        for obj in &pose.objects {
+            eprintln!("[SCML Debug]   obj {}: world=({:.1}, {:.1}) angle={:.1} folder={} file={}",
+                obj.name, obj.world_x, obj.world_y, obj.world_angle, obj.folder, obj.file);
+        }
     }
 }
